@@ -25,9 +25,11 @@ import java.security.NoSuchAlgorithmException;
 public class MainActivity extends AppCompatActivity {
 
     //todo добавить свою экранную клавиатуру
+    //todo добавить о программе
 
     private int currentPasswordLength;
     private TextView tvPassword;
+    private Button btCopy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         tvPassword = findViewById(R.id.tvPassword);
 
-        Button btCopy = findViewById(R.id.btCopy);
+        btCopy  = findViewById(R.id.btCopy);
         btCopy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        btCopy.setClickable(false);
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item);
         for (int i =0;i<=8;i++)
@@ -78,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                     String keyPhrase = etKeyPhrase.getText().toString();
                     if (!keyPhrase.equals("")) {
                         tvPassword.setText(codePassword(keyPhrase));
+                        btCopy.setClickable(false);
                     }
                 }
             }
@@ -120,7 +124,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void afterTextChanged(Editable s) {
             String keyPhrase = editText.getText().toString();
-            tvPassword.setText(codePassword(keyPhrase));
+            if (!keyPhrase.equals("")) {
+                tvPassword.setText(codePassword(keyPhrase));
+                btCopy.setClickable(true);
+
+            }
+            else {
+                tvPassword.setText("");
+                btCopy.setClickable(false);
+            }
         }
     }
 
