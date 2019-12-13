@@ -2,22 +2,31 @@ package ru.andreykulbatsky.passwordmanager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class MainActivity extends AppCompatActivity {
 
-    private int currentPasswordLength = 10;
+    //todo добавить свою экранную клавиатуру
+
+    private int currentPasswordLength;
     private TextView tvPassword;
 
     @Override
@@ -25,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EditText etKeyPhrase = findViewById(R.id.etKeyPhrase);
+        final EditText etKeyPhrase = findViewById(R.id.etKeyPhrase);
         etKeyPhrase.setFocusable(true);
         etKeyPhrase.requestFocus();
 
@@ -33,6 +42,20 @@ public class MainActivity extends AppCompatActivity {
         etKeyPhrase.addTextChangedListener(textWatcher);
 
         tvPassword = findViewById(R.id.tvPassword);
+
+        Button btCopy = findViewById(R.id.btCopy);
+        btCopy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String text = tvPassword.getText().toString();
+                if (!text.equals("")) {
+                    ClipboardManager clipboard = (ClipboardManager) MainActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("text", text);
+                    clipboard.setPrimaryClip(clip);
+                    Toast.makeText(MainActivity.this, MainActivity.this.getString(R.string.password_copied_notification), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item);
         for (int i =0;i<=8;i++)
@@ -51,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
                 if (currentPasswordLength!= (position+8)) {
                     currentPasswordLength = (position+8);
                     saveCurrentPasswordLength(currentPasswordLength);
+
+                    String keyPhrase = etKeyPhrase.getText().toString();
+                    if (!keyPhrase.equals("")) {
+                        tvPassword.setText(codePassword(keyPhrase));
+                    }
                 }
             }
 
@@ -69,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("length",length);
-        editor.commit();
+        editor.apply();
     }
 
     private class PhraseTextWatcher implements TextWatcher {
@@ -92,7 +120,34 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void afterTextChanged(Editable s) {
             String keyPhrase = editText.getText().toString();
-            tvPassword.setText(keyPhrase);
+            tvPassword.setText(codePassword(keyPhrase));
         }
     }
+
+    private String codePassword(String keyPhrase) {
+        MessageDigest messageDigest;
+        byte[] md5Hash;
+
+        try {
+            messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.reset();
+            messageDigest.update(keyPhrase.getBytes());
+            md5Hash = messageDigest.digest();
+
+            byte[] base64Hash = Base64.encode(md5Hash,Base64.DEFAULT);
+            StringBuilder resultString = new StringBuilder();
+
+            for (int i=0;i<currentPasswordLength;i++) {
+                resultString.append((char) base64Hash[i]);
+            }
+
+            return resultString.toString();
+        }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    //TODO написать криптографическое преобразование строки
 }
