@@ -6,24 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/etKeyPhrase"
+    <TextView
+        android:id="@+id/tvKeyPhrase"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/enter_key_phrase"
-        android:inputType="text"
         android:textSize="@dimen/text_size"
+        android:textColor="@color/colorAccent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-    </EditText>
+    </TextView>
 
     <LinearLayout
         android:id="@+id/llPasswordLength"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/etKeyPhrase">
+        android:layout_marginTop="@dimen/text_size"
+        app:layout_constraintTop_toBottomOf="@+id/tvKeyPhrase">
 
         <TextView
             android:layout_width="wrap_content"
@@ -72,6 +73,14 @@
         android:text="@string/password_copy">
     </Button>
 
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:keyPreviewHeight="35dp"
+        android:keyPreviewLayout="@layout/preview"
+        app:layout_constraintBottom_toBottomOf="parent">
+    </android.inputmethodservice.KeyboardView>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

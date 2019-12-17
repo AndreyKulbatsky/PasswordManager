@@ -8,10 +8,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.inputmethodservice.Keyboard;
+import android.inputmethodservice.KeyboardView;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,6 +37,11 @@ public class MainActivity extends AppCompatActivity {
     private int currentPasswordLength;
     private TextView tvPassword;
     private Button btCopy;
+    private KeyboardView mKeyboardView;
+    private Keyboard mKeyboard;
+    private Constants.KEYS_TYPE mCurrentLocale;
+    private Constants.KEYS_TYPE mPreviousLocale;
+    private boolean isCapsOn = false;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -54,19 +63,175 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void playClick(int keyCode) {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        switch (keyCode) {
+            case Constants.KeyCode.SPACE:
+                am.playSoundEffect(AudioManager.FX_KEYPRESS_SPACEBAR);
+                break;
+            case Keyboard.KEYCODE_DONE:
+                am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN);
+                break;
+            case Constants.KeyCode.RETURN:
+                am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN);
+                break;
+            case Keyboard.KEYCODE_DELETE:
+                am.playSoundEffect(AudioManager.FX_KEYPRESS_DELETE);
+                break;
+            default:
+                am.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD);
+                break;
+        }
+    }
+    private Keyboard getKeyboard(Constants.KEYS_TYPE locale) {
+        switch (locale) {
+            case RUSSIAN:
+                return new Keyboard(this, R.xml.keys_definition_ru);
+            case ENGLISH:
+                return new Keyboard(this, R.xml.keys_definition_en);
+            case SYMBOLS:
+                return new Keyboard(this, R.xml.keys_definition_symbols);
+            default:
+                return new Keyboard(this, R.xml.keys_definition_ru);
+        }
+    }
+
+    private void handleSymbolsSwitch() {
+        if (mCurrentLocale != Constants.KEYS_TYPE.SYMBOLS) {
+            mKeyboard = getKeyboard(Constants.KEYS_TYPE.SYMBOLS);
+            mPreviousLocale = mCurrentLocale;
+            mCurrentLocale = Constants.KEYS_TYPE.SYMBOLS;
+        } else {
+            mKeyboard = getKeyboard(mPreviousLocale);
+            mCurrentLocale = mPreviousLocale;
+            mKeyboard.setShifted(isCapsOn);
+        }
+        mKeyboardView.setKeyboard(mKeyboard);
+        mKeyboardView.invalidateAllKeys();
+    }
+
+    private void handleShift() {
+        isCapsOn = !isCapsOn;
+        mKeyboard.setShifted(isCapsOn);
+        mKeyboardView.invalidateAllKeys();
+    }
+
+    private void handleLanguageSwitch() {
+        if (mCurrentLocale == Constants.KEYS_TYPE.RUSSIAN) {
+            mCurrentLocale = Constants.KEYS_TYPE.ENGLISH;
+            mKeyboard = getKeyboard(Constants.KEYS_TYPE.ENGLISH);
+        } else {
+            mCurrentLocale = Constants.KEYS_TYPE.RUSSIAN;
+            mKeyboard = getKeyboard(Constants.KEYS_TYPE.RUSSIAN);
+        }
+
+        mKeyboardView.setKeyboard(mKeyboard);
+        mKeyboard.setShifted(isCapsOn);
+        mKeyboardView.invalidateAllKeys();
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final EditText etKeyPhrase = findViewById(R.id.etKeyPhrase);
-        etKeyPhrase.setFocusable(true);
-        etKeyPhrase.requestFocus();
-
-        PhraseTextWatcher textWatcher = new PhraseTextWatcher(etKeyPhrase);
-        etKeyPhrase.addTextChangedListener(textWatcher);
+        final TextView tvKeyPhrase = findViewById(R.id.tvKeyPhrase);
+        tvKeyPhrase.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                Toast.makeText(MainActivity.this,"key",Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
 
         tvPassword = findViewById(R.id.tvPassword);
+
+        mKeyboardView = findViewById(R.id.keyboard);
+        mCurrentLocale = Constants.KEYS_TYPE.RUSSIAN;
+        mKeyboard = getKeyboard(mCurrentLocale);
+        mKeyboard.setShifted(isCapsOn);
+        mKeyboardView.setKeyboard(mKeyboard);
+        mKeyboardView.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener() {
+            @Override
+            public void onPress(int primaryCode) {
+
+            }
+
+            @Override
+            public void onRelease(int primaryCode) {
+
+            }
+
+            @Override
+            public void onKey(int primaryCode, int[] keyCodes) {
+                String text = tvKeyPhrase.getText().toString();
+                playClick(primaryCode);
+                switch (primaryCode) {
+                    case Keyboard.KEYCODE_DELETE:
+                        if (!text.equals(""))
+                        {
+                            text = text.substring(0,text.length()-1);
+                            tvKeyPhrase.setText(text);
+                        }
+                        break;
+                    case Keyboard.KEYCODE_SHIFT:
+                        handleShift();
+                        break;
+                    case Keyboard.KEYCODE_DONE:
+                        break;
+                    case Keyboard.KEYCODE_ALT:
+                        handleSymbolsSwitch();
+                        break;
+                    case Keyboard.KEYCODE_MODE_CHANGE:
+                        handleLanguageSwitch();
+                        break;
+                    default:
+                        char code = (char) primaryCode;
+                        if (Character.isLetter(code) && isCapsOn) {
+                            code = Character.toUpperCase(code);
+                        }
+                        text += code;
+                        tvKeyPhrase.setText(text);
+                        break;
+                }
+                if (!text.equals("")) {
+                    tvPassword.setText(codePassword(text));
+                    btCopy.setClickable(true);
+
+                }
+                else {
+                    tvPassword.setText("");
+                    btCopy.setClickable(false);
+                }
+
+            }
+
+            @Override
+            public void onText(CharSequence text) {
+
+            }
+
+            @Override
+            public void swipeLeft() {
+
+            }
+
+            @Override
+            public void swipeRight() {
+
+            }
+
+            @Override
+            public void swipeDown() {
+
+            }
+
+            @Override
+            public void swipeUp() {
+
+            }
+        });
 
         btCopy  = findViewById(R.id.btCopy);
         btCopy.setOnClickListener(new View.OnClickListener() {
@@ -101,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     currentPasswordLength = (position+8);
                     saveCurrentPasswordLength(currentPasswordLength);
 
-                    String keyPhrase = etKeyPhrase.getText().toString();
+                    String keyPhrase = tvKeyPhrase.getText().toString();
                     if (!keyPhrase.equals("")) {
                         tvPassword.setText(codePassword(keyPhrase));
                         btCopy.setClickable(false);
@@ -125,38 +290,6 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("length",length);
         editor.apply();
-    }
-
-    private class PhraseTextWatcher implements TextWatcher {
-
-        private final EditText editText;
-
-        PhraseTextWatcher(EditText editText){
-            super();
-            this.editText = editText;
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            String keyPhrase = editText.getText().toString();
-            if (!keyPhrase.equals("")) {
-                tvPassword.setText(codePassword(keyPhrase));
-                btCopy.setClickable(true);
-
-            }
-            else {
-                tvPassword.setText("");
-                btCopy.setClickable(false);
-            }
-        }
     }
 
     private String codePassword(String keyPhrase) {
