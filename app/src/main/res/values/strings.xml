@@ -5,4 +5,7 @@
     <string name="password">Пароль: </string>
     <string name="password_copy">Копировать</string>
     <string name="password_copied_notification">Пароль скопирован в буфер обмена</string>
+    <string name="about">О программе</string>
+    <string name="version">Версия</string>
+    <string name="email">andrey.kulbatsky@gmail.com</string>
 </resources>

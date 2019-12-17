@@ -6,10 +6,13 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -18,6 +21,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Menu;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,11 +29,30 @@ import java.security.NoSuchAlgorithmException;
 public class MainActivity extends AppCompatActivity {
 
     //todo добавить свою экранную клавиатуру
-    //todo добавить о программе
 
     private int currentPasswordLength;
     private TextView tvPassword;
     private Button btCopy;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        PackageInfo pInfo;
+        String version="";
+
+        try {
+            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(MainActivity.this,getString(R.string.app_name) + "\n" + getString(R.string.version) + " " + version + "\n" + getString(R.string.email), Toast.LENGTH_LONG).show();
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,6 +183,4 @@ public class MainActivity extends AppCompatActivity {
             return "";
         }
     }
-
-    //TODO написать криптографическое преобразование строки
 }
