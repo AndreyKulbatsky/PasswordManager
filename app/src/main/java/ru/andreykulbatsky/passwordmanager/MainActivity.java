@@ -27,12 +27,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.view.Menu;
 
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends AppCompatActivity {
-
-    //todo добавить свою экранную клавиатуру
 
     private int currentPasswordLength;
     private TextView tvPassword;
@@ -294,22 +293,14 @@ public class MainActivity extends AppCompatActivity {
 
     private String codePassword(String keyPhrase) {
         MessageDigest messageDigest;
-        byte[] md5Hash;
 
         try {
             messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.reset();
-            messageDigest.update(keyPhrase.getBytes());
-            md5Hash = messageDigest.digest();
+            messageDigest.update(keyPhrase.getBytes(Charset.forName("ASCII")));
+            byte[] md5Hash = messageDigest.digest();
 
-            byte[] base64Hash = Base64.encode(md5Hash,Base64.DEFAULT);
-            StringBuilder resultString = new StringBuilder();
-
-            for (int i=0;i<currentPasswordLength;i++) {
-                resultString.append((char) base64Hash[i]);
-            }
-
-            return resultString.toString();
+            return Base64.encodeToString(md5Hash,0,md5Hash.length,Base64.DEFAULT).substring(0,currentPasswordLength);
         }
         catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
