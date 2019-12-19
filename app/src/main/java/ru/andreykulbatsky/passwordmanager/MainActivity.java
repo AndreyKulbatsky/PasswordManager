@@ -269,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
                     String keyPhrase = tvKeyPhrase.getText().toString();
                     if (!keyPhrase.equals("")) {
                         tvPassword.setText(codePassword(keyPhrase));
-                        btCopy.setClickable(false);
+                        btCopy.setClickable(true);
                     }
                 }
             }
