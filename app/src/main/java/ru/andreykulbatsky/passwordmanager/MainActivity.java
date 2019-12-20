@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.media.AudioManager;
@@ -66,8 +67,6 @@ public class MainActivity extends AppCompatActivity {
                 am.playSoundEffect(AudioManager.FX_KEYPRESS_SPACEBAR);
                 break;
             case Keyboard.KEYCODE_DONE:
-                am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN);
-                break;
             case Constants.KeyCode.RETURN:
                 am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN);
                 break;
@@ -81,8 +80,6 @@ public class MainActivity extends AppCompatActivity {
     }
     private Keyboard getKeyboard(Constants.KEYS_TYPE locale) {
         switch (locale) {
-            case RUSSIAN:
-                return new Keyboard(this, R.xml.keys_definition_ru);
             case ENGLISH:
                 return new Keyboard(this, R.xml.keys_definition_en);
             case SYMBOLS:
@@ -191,14 +188,15 @@ public class MainActivity extends AppCompatActivity {
                         tvKeyPhrase.setText(text);
                         break;
                 }
-                if (!text.equals("")) {
+                if ((!text.equals(""))&(text.length()>currentPasswordLength)) {
                     tvPassword.setText(codePassword(text));
                     btCopy.setClickable(true);
-
+                    btCopy.setTextColor(Color.BLACK);
                 }
                 else {
                     tvPassword.setText("");
                     btCopy.setClickable(false);
+                    btCopy.setTextColor(Color.GRAY);
                 }
 
             }
@@ -243,6 +241,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         btCopy.setClickable(false);
+        btCopy.setTextColor(Color.GRAY);
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item);
         for (int i =0;i<=8;i++)
@@ -263,9 +262,16 @@ public class MainActivity extends AppCompatActivity {
                     saveCurrentPasswordLength(currentPasswordLength);
 
                     String keyPhrase = tvKeyPhrase.getText().toString();
-                    if (!keyPhrase.equals("")) {
+                    if ((!keyPhrase.equals(""))&(keyPhrase.length()>currentPasswordLength)) {
                         tvPassword.setText(codePassword(keyPhrase));
                         btCopy.setClickable(true);
+                        btCopy.setTextColor(Color.BLACK);
+                    }
+                    else
+                    {
+                        tvPassword.setText("");
+                        btCopy.setClickable(false);
+                        btCopy.setTextColor(Color.GRAY);
                     }
                 }
             }
