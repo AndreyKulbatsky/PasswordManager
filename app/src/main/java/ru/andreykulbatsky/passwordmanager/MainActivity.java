@@ -2,9 +2,11 @@ package ru.andreykulbatsky.passwordmanager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -14,12 +16,15 @@ import android.inputmethodservice.KeyboardView;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +33,9 @@ import android.view.Menu;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +55,34 @@ public class MainActivity extends AppCompatActivity {
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.itHelp:
+                showHelp();
+            break;
+            case R.id.itAbout:
+                showAboutDialog();
+            break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showHelp() {
+        TextView title = new TextView(this);
+        title.setText(R.string.help);
+        title.setGravity(Gravity.CENTER);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCustomTitle(title);
+        builder.setCancelable(true);
+        builder.setMessage(getString(R.string.help_text));
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void showAboutDialog() {
+        TextView title = new TextView(this);
+        title.setText(R.string.about);
+        title.setGravity(Gravity.CENTER);
+
         PackageInfo pInfo;
         String version="";
 
@@ -56,8 +92,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        Toast.makeText(MainActivity.this,getString(R.string.app_name) + "\n" + getString(R.string.version) + " " + version + "\n" + getString(R.string.email), Toast.LENGTH_LONG).show();
-        return super.onOptionsItemSelected(item);
+        String about = getString(R.string.app_name) + "\n" + getString(R.string.version) + " " + version + "\n" + getString(R.string.email);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCustomTitle(title);
+        builder.setCancelable(true);
+        builder.setMessage(about);
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        TextView message = dialog.findViewById(android.R.id.message);
+        message.setGravity(Gravity.CENTER);
     }
 
     private void playClick(int keyCode) {
@@ -301,9 +345,17 @@ public class MainActivity extends AppCompatActivity {
             messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.reset();
             messageDigest.update(keyPhrase.getBytes(Charset.forName("ASCII")));
-            byte[] md5Hash = messageDigest.digest();
+            byte[] md5Hash1 = messageDigest.digest();
+            messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.reset();
+            messageDigest.update(md5Hash1);
+            byte[] sha256 = messageDigest.digest();
+            messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.reset();
+            messageDigest.update(sha256);
+            byte[] md5Hash2 = messageDigest.digest();
 
-            return Base64.encodeToString(md5Hash,0,md5Hash.length,Base64.DEFAULT).substring(0,currentPasswordLength);
+            return Base64.encodeToString(md5Hash2,0,md5Hash2.length,Base64.DEFAULT).substring(0,currentPasswordLength);
         }
         catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
