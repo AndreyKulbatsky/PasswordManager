@@ -10,13 +10,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -163,22 +163,18 @@ public class MainActivity extends AppCompatActivity {
         mKeyboardView.invalidateAllKeys();
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         final TextView tvKeyPhrase = findViewById(R.id.tvKeyPhrase);
-        tvKeyPhrase.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                Toast.makeText(MainActivity.this,"key",Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
+        Typeface typeface = Typeface.createFromAsset(getAssets(),"fonts/Times New Roman Cyr.ttf");
+        tvKeyPhrase.setTypeface(typeface);
 
         tvPassword = findViewById(R.id.tvPassword);
+        typeface = Typeface.createFromAsset(getAssets(),"fonts/Times New Roman Cyr.ttf");
+        tvPassword.setTypeface(typeface);
 
         mKeyboardView = findViewById(R.id.keyboard);
         mCurrentLocale = Constants.KEYS_TYPE.RUSSIAN;
@@ -351,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
             messageDigest.update(sha256);
             byte[] md5Hash2 = messageDigest.digest();
 
-            return Base64.encodeToString(md5Hash2,0,md5Hash2.length,Base64.DEFAULT).substring(0,currentPasswordLength);
+            return " " + Base64.encodeToString(md5Hash2,0,md5Hash2.length,Base64.DEFAULT).substring(0,currentPasswordLength);
         }
         catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

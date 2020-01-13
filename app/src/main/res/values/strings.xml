@@ -2,7 +2,7 @@
     <string name="app_name">Менеджер паролей</string>
     <string name="enter_key_phrase">Введите ключевую фразу</string>
     <string name="select_password_length">Выберите длину пароля</string>
-    <string name="password">Пароль: </string>
+    <string name="password">Пароль:</string>
     <string name="password_copy">Копировать</string>
     <string name="password_copied_notification">Пароль скопирован в буфер обмена</string>
     <string name="help">Справка</string>
