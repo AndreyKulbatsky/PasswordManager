@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable
-            name="password" type="String" />
+        <variable name="password" type="String" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -73,6 +72,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/text_size"
                 android:textColor="@color/text_color"
+                android:fontFamily="@font/times_new_roman_cyr"
                 android:text="@{password}">
             </TextView>
         </LinearLayout>
@@ -85,6 +85,8 @@
             android:text="@string/password_copy"
             android:textAllCaps="false"
             android:textSize="@dimen/text_size"
+            android:textColor="@{password.length>0 ? @color/key_text_enabled : @color/key_text_disabled}"
+            android:clickable="@{password.length>0 ? true : false}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/llPassword">

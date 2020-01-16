@@ -6,7 +6,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.inputmethodservice.Keyboard
 import android.inputmethodservice.KeyboardView
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener
@@ -21,23 +20,106 @@ import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import ru.andreykulbatsky.passwordmanager.Constants.KeysType
 import ru.andreykulbatsky.passwordmanager.databinding.ActivityMainBinding
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
-//todo добавить шрифты
-
 class MainActivity : AppCompatActivity() {
 
+    private object KeyCode {
+        const val SPACE = 32
+        const val RETURN = 10
+    }
+    private enum class KeysType {
+        SYMBOLS, ENGLISH, RUSSIAN
+    }
     private var currentPasswordLength = 0
-    private lateinit var btCopy: Button
     private lateinit var mKeyboardView: KeyboardView
     private lateinit var mKeyboard: Keyboard
     private lateinit var mCurrentLocale: KeysType
     private lateinit var mPreviousLocale: KeysType
     private var isCapsOn = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val binding : ActivityMainBinding = DataBindingUtil.setContentView(this@MainActivity, R.layout.activity_main)
+
+        val tvKeyPhrase = binding.tvKeyPhrase
+        mCurrentLocale = KeysType.RUSSIAN
+        mKeyboard = getKeyboard(mCurrentLocale)
+        mKeyboard.isShifted = isCapsOn
+        mKeyboardView = binding.keyboard
+        mKeyboardView.keyboard = mKeyboard
+        mKeyboardView.setOnKeyboardActionListener(object : OnKeyboardActionListener {
+            override fun onPress(primaryCode: Int) {}
+            override fun onRelease(primaryCode: Int) {}
+            override fun onKey(primaryCode: Int, keyCodes: IntArray) {
+                var text = tvKeyPhrase.text.toString()
+                playClick(primaryCode)
+                when (primaryCode) {
+                    Keyboard.KEYCODE_DELETE -> if (text != "") {
+                        text = text.substring(0, text.length - 1)
+                        tvKeyPhrase.text = text
+                    }
+                    Keyboard.KEYCODE_SHIFT -> handleShift()
+                    Keyboard.KEYCODE_DONE -> {}
+                    Keyboard.KEYCODE_ALT -> handleSymbolsSwitch()
+                    Keyboard.KEYCODE_MODE_CHANGE -> handleLanguageSwitch()
+                    else -> {
+                        var code = primaryCode.toChar()
+                        if (Character.isLetter(code) && isCapsOn) {
+                            code = Character.toUpperCase(code)
+                        }
+                        text += code
+                        tvKeyPhrase.text = text
+                    }
+                }
+                if (text.length > currentPasswordLength) {
+                    binding.password = codePassword(text)
+                } else {
+                    binding.password = ""
+                }
+            }
+
+            override fun onText(text: CharSequence) {}
+            override fun swipeLeft() {}
+            override fun swipeRight() {}
+            override fun swipeDown() {}
+            override fun swipeUp() {}
+        })
+        binding.btCopy.setOnClickListener {
+            if (binding.password != "") {
+                val clipboard = this@MainActivity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("text", binding.password)
+                clipboard.primaryClip = clip
+                Toast.makeText(this@MainActivity, this@MainActivity.getString(R.string.password_copied_notification), Toast.LENGTH_SHORT).show()
+            }
+        }
+        val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item)
+        for (i in 0..8) arrayAdapter.add((i + 8).toString())
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
+        currentPasswordLength = readCurrentPasswordLength()
+        val spinner = binding.spinner
+        spinner.adapter = arrayAdapter
+        spinner.setSelection(currentPasswordLength - 8)
+        spinner.onItemSelectedListener = object : OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
+                if (currentPasswordLength != position + 8) {
+                    currentPasswordLength = position + 8
+                    saveCurrentPasswordLength(currentPasswordLength)
+                    val keyPhrase = tvKeyPhrase.text.toString()
+                    if (keyPhrase.length > currentPasswordLength) {
+                        binding.password = codePassword(keyPhrase)
+                    } else {
+                        binding.password = ""
+                    }
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
@@ -90,8 +172,8 @@ class MainActivity : AppCompatActivity() {
     private fun playClick(keyCode: Int) {
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         when (keyCode) {
-            Constants.KeyCode.SPACE -> am.playSoundEffect(AudioManager.FX_KEYPRESS_SPACEBAR)
-            Keyboard.KEYCODE_DONE, Constants.KeyCode.RETURN -> am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN)
+            KeyCode.SPACE -> am.playSoundEffect(AudioManager.FX_KEYPRESS_SPACEBAR)
+            Keyboard.KEYCODE_DONE, KeyCode.RETURN -> am.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN)
             Keyboard.KEYCODE_DELETE -> am.playSoundEffect(AudioManager.FX_KEYPRESS_DELETE)
             else -> am.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD)
         }
@@ -138,98 +220,6 @@ class MainActivity : AppCompatActivity() {
         mKeyboardView.invalidateAllKeys()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val binding : ActivityMainBinding = DataBindingUtil.setContentView(this@MainActivity, R.layout.activity_main)
-
-        val tvKeyPhrase = binding.tvKeyPhrase
-        mCurrentLocale = KeysType.RUSSIAN
-        mKeyboard = getKeyboard(mCurrentLocale)
-        mKeyboard.isShifted = isCapsOn
-        mKeyboardView = binding.keyboard
-        mKeyboardView.keyboard = mKeyboard
-        mKeyboardView.setOnKeyboardActionListener(object : OnKeyboardActionListener {
-            override fun onPress(primaryCode: Int) {}
-            override fun onRelease(primaryCode: Int) {}
-            override fun onKey(primaryCode: Int, keyCodes: IntArray) {
-                var text = tvKeyPhrase.text.toString()
-                playClick(primaryCode)
-                when (primaryCode) {
-                    Keyboard.KEYCODE_DELETE -> if (text != "") {
-                        text = text.substring(0, text.length - 1)
-                        tvKeyPhrase.text = text
-                    }
-                    Keyboard.KEYCODE_SHIFT -> handleShift()
-                    Keyboard.KEYCODE_DONE -> {
-                    }
-                    Keyboard.KEYCODE_ALT -> handleSymbolsSwitch()
-                    Keyboard.KEYCODE_MODE_CHANGE -> handleLanguageSwitch()
-                    else -> {
-                        var code = primaryCode.toChar()
-                        if (Character.isLetter(code) && isCapsOn) {
-                            code = Character.toUpperCase(code)
-                        }
-                        text += code
-                        tvKeyPhrase.text = text
-                    }
-                }
-                if (text.length > currentPasswordLength) {
-                    binding.password = codePassword(text)
-                    btCopy.isClickable = true
-                    btCopy.setTextColor(Color.BLACK)
-                } else {
-                    binding.password = ""
-                    btCopy.isClickable = false
-                    btCopy.setTextColor(Color.GRAY)
-                }
-            }
-
-            override fun onText(text: CharSequence) {}
-            override fun swipeLeft() {}
-            override fun swipeRight() {}
-            override fun swipeDown() {}
-            override fun swipeUp() {}
-        })
-        btCopy = binding.btCopy
-        btCopy.setOnClickListener {
-            if (binding.password != "") {
-                val clipboard = this@MainActivity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("text", binding.password)
-                clipboard.primaryClip = clip
-                Toast.makeText(this@MainActivity, this@MainActivity.getString(R.string.password_copied_notification), Toast.LENGTH_SHORT).show()
-            }
-        }
-        btCopy.isClickable = false
-        btCopy.setTextColor(Color.GRAY)
-        val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item)
-        for (i in 0..8) arrayAdapter.add((i + 8).toString())
-        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
-        currentPasswordLength = readCurrentPasswordLength()
-        val spinner = binding.spinner
-        spinner.adapter = arrayAdapter
-        spinner.setSelection(currentPasswordLength - 8)
-        spinner.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
-                if (currentPasswordLength != position + 8) {
-                    currentPasswordLength = position + 8
-                    saveCurrentPasswordLength(currentPasswordLength)
-                    val keyPhrase = tvKeyPhrase.text.toString()
-                    if (keyPhrase.length > currentPasswordLength) {
-                        binding.password = codePassword(keyPhrase)
-                        btCopy.isClickable = true
-                        btCopy.setTextColor(Color.BLACK)
-                    } else {
-                        binding.password = ""
-                        btCopy.isClickable = false
-                        btCopy.setTextColor(Color.GRAY)
-                    }
-                }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
-    }
-
     private fun readCurrentPasswordLength(): Int {
         val preferences = getPreferences(Context.MODE_PRIVATE)
         return preferences.getInt("length", 10)
@@ -257,7 +247,7 @@ class MainActivity : AppCompatActivity() {
             messageDigest.reset()
             messageDigest.update(sha256)
             val md5Hash2 = messageDigest.digest()
-            " " + Base64.encodeToString(md5Hash2, 0, md5Hash2.size, Base64.DEFAULT).substring(0, currentPasswordLength)
+            Base64.encodeToString(md5Hash2, 0, md5Hash2.size, Base64.DEFAULT).substring(0, currentPasswordLength)
         } catch (e: NoSuchAlgorithmException) {
             e.printStackTrace()
             ""

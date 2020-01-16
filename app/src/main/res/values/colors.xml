@@ -8,4 +8,7 @@
 
     <color name="key_preview_background">@android:color/darker_gray</color>
     <color name="key_preview_text_color">@android:color/black</color>
+
+    <color name="key_text_enabled">@android:color/black</color>
+    <color name="key_text_disabled">@android:color/darker_gray</color>
 </resources>
