@@ -1,95 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <TextView
-        android:id="@+id/tvKeyPhrase"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/enter_key_phrase"
-        android:textSize="@dimen/text_size"
-        android:textColor="@color/text_color"
-        android:layout_marginTop="@dimen/text_size"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-    </TextView>
+    <data>
+        <variable
+            name="password" type="String" />
+    </data>
 
-    <LinearLayout
-        android:id="@+id/llPasswordLength"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/text_size"
-        app:layout_constraintTop_toBottomOf="@+id/tvKeyPhrase">
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvKeyPhrase"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/select_password_length"
+            android:hint="@string/enter_key_phrase"
             android:textSize="@dimen/text_size"
-            android:textColor="@color/text_color">
+            android:textColor="@color/text_color"
+            android:layout_marginTop="@dimen/text_size"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
         </TextView>
 
-        <Spinner
-            android:id="@+id/spinner"
+        <LinearLayout
+            android:id="@+id/llPasswordLength"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/text_size"
+            app:layout_constraintTop_toBottomOf="@+id/tvKeyPhrase">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_password_length"
+                android:textSize="@dimen/text_size"
+                android:textColor="@color/text_color">
+            </TextView>
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size"
+                android:textColor="@color/text_color">
+            </Spinner>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/text_size"
+            app:layout_constraintTop_toBottomOf="@id/llPasswordLength">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/password"
+                android:textSize="@dimen/text_size"
+                android:textColor="@color/text_color">
+            </TextView>
+
+            <TextView
+                android:id="@+id/tvPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size"
+                android:textColor="@color/text_color"
+                android:text="@{password}">
+            </TextView>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btCopy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/text_size"
+            android:text="@string/password_copy"
+            android:textAllCaps="false"
             android:textSize="@dimen/text_size"
-            android:textColor="@color/text_color">
-        </Spinner>
-    </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/llPassword">
+        </Button>
 
-    <LinearLayout
-        android:id="@+id/llPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/text_size"
-        app:layout_constraintTop_toBottomOf="@id/llPasswordLength">
-
-        <TextView
-            android:layout_width="wrap_content"
+        <android.inputmethodservice.KeyboardView
+            android:id="@+id/keyboard"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/password"
-            android:textSize="@dimen/text_size"
-            android:textColor="@color/text_color">
-        </TextView>
-
-        <TextView
-            android:id="@+id/tvPassword"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_size"
-            android:textColor="@color/text_color">
-        </TextView>
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/btCopy"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/text_size"
-        android:text="@string/password_copy"
-        android:textAllCaps="false"
-        android:textSize="@dimen/text_size"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/llPassword">
-    </Button>
-
-    <android.inputmethodservice.KeyboardView
-        android:id="@+id/keyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:keyPreviewHeight="35dp"
-        android:keyPreviewLayout="@layout/preview"
-        app:layout_constraintBottom_toBottomOf="parent">
-    </android.inputmethodservice.KeyboardView>
+            android:keyPreviewHeight="35dp"
+            android:keyPreviewLayout="@layout/preview"
+            app:layout_constraintBottom_toBottomOf="parent">
+        </android.inputmethodservice.KeyboardView>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
